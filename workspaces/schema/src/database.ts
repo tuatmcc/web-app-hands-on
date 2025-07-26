@@ -1,29 +1,41 @@
+import dayjs from "dayjs";
 import { relations } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+	foreignKey,
+	integer,
+	sqliteTable,
+	text,
+} from "drizzle-orm/sqlite-core";
+import { ulid } from "ulid";
 
-export const posts = sqliteTable("posts", {
-	// Primary Key
-	id: text("id")
-		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
+export const posts = sqliteTable(
+	"posts",
+	{
+		// Primary Key
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => ulid()),
 
-	name: text("name"),
-	content: text("content"),
-	parent_id: text("parent_id").references(() => posts.id),
-	likes: integer("likes").default(0),
+		name: text("name"),
+		content: text("content"),
+		parentId: text("parent_id"),
+		likes: integer("likes").default(0),
 
-	createdAt: integer("created_at", {
-		mode: "timestamp_ms",
-	}).$defaultFn(() => new Date()),
-	updatedAt: integer("updated_at", {
-		mode: "timestamp_ms",
-	}).$defaultFn(() => new Date()),
-});
+		createdAt: integer("created_at").$defaultFn(() => dayjs().valueOf()),
+		updatedAt: integer("updated_at").$defaultFn(() => dayjs().valueOf()),
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.parentId],
+			foreignColumns: [table.id],
+		}),
+	],
+);
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
 	replies: many(posts),
 	parent: one(posts, {
-		fields: [posts.parent_id],
+		fields: [posts.parentId],
 		references: [posts.id],
 	}),
 }));

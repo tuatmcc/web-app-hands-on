@@ -1,6 +1,6 @@
 import { swaggerUI } from "@hono/swagger-ui";
-import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
-import { helloWorldQuery, helloWorldResponse } from "@mcc/schema/api";
+import { OpenAPIHono } from "@hono/zod-openapi";
+import * as routes from "./routes";
 
 type Bindings = {
 	DB: D1Database;
@@ -8,29 +8,26 @@ type Bindings = {
 
 const app = new OpenAPIHono<{ Bindings: Bindings }>();
 
-app.openapi(
-	createRoute({
-		method: "get",
-		path: "/",
-		request: {
-			query: helloWorldQuery,
-		},
-		responses: {
-			200: {
-				description: "Successful response",
-				content: {
-					"text/plain": {
-						schema: helloWorldResponse,
-					},
-				},
-			},
-		},
-	}),
-	(c) => {
-		const { name } = c.req.valid("query");
-		return c.text(`Hello, ${name ?? "World"}!`);
-	},
-);
+app.openapi(routes.helloWorldRoute, (c) => {
+	const { name } = c.req.valid("query");
+	return c.text(`Hello, ${name ?? "World"}!`);
+});
+
+app.openapi(routes.createPostRoute, () => {
+	throw new Error("Not implemented");
+});
+
+app.openapi(routes.likePostRoute, () => {
+	throw new Error("Not implemented");
+});
+
+app.openapi(routes.listPostsRoute, () => {
+	throw new Error("Not implemented");
+});
+
+app.openapi(routes.getPostRoute, () => {
+	throw new Error("Not implemented");
+});
 
 app.doc("/openapi", {
 	openapi: "3.0.0",
