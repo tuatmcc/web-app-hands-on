@@ -17,12 +17,16 @@ export const posts = sqliteTable(
 			.$defaultFn(() => ulid()),
 
 		name: text("name"),
-		content: text("content"),
+		content: text("content").notNull(),
 		parentId: text("parent_id"),
-		likes: integer("likes").default(0),
+		likes: integer("likes").notNull().default(0),
 
-		createdAt: integer("created_at").$defaultFn(() => dayjs().valueOf()),
-		updatedAt: integer("updated_at").$defaultFn(() => dayjs().valueOf()),
+		createdAt: integer("created_at")
+			.notNull()
+			.$defaultFn(() => dayjs().valueOf()),
+		updatedAt: integer("updated_at")
+			.notNull()
+			.$defaultFn(() => dayjs().valueOf()),
 	},
 	(table) => [
 		foreignKey({

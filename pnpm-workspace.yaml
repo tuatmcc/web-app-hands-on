@@ -1,7 +1,12 @@
-savePrefix: ""
 packages:
   - ./workspaces/*
+
 onlyBuiltDependencies:
   - esbuild
   - sharp
   - workerd
+
+patchedDependencies:
+  drizzle-orm: patches/drizzle-orm.patch
+
+savePrefix: ''

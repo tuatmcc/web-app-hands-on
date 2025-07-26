@@ -66,6 +66,33 @@ export const likePostRoute = createRoute({
 	},
 });
 
+export const createReplyRoute = createRoute({
+	method: "post",
+	path: "/api/posts/{id}/reply",
+	tags: ["posts"],
+	description: "返信を作成する",
+	request: {
+		params: schema.createReplyParams,
+		body: {
+			content: {
+				"application/json": {
+					schema: schema.createReplyBody,
+				},
+			},
+		},
+	},
+	responses: {
+		200: {
+			description: "リクエスト成功",
+			content: {
+				"application/json": {
+					schema: schema.createReplyResponse,
+				},
+			},
+		},
+	},
+});
+
 export const listPostsRoute = createRoute({
 	method: "get",
 	path: "/api/posts",
