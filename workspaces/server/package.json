@@ -1,0 +1,13 @@
+{
+  "name": "@mcc/server",
+  "version": "1.0.0",
+  "author": "NISHIZAWA Shuntaro",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@mcc/config": "workspace:*",
+    "typescript": "5.8.3",
+    "wrangler": "4.26.0"
+  }
+}

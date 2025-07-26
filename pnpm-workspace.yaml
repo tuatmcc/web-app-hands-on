@@ -1,0 +1,7 @@
+savePrefix: ""
+packages:
+  - ./workspaces/*
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd

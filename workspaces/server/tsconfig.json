@@ -1,0 +1,3 @@
+{
+  "extends": ["@mcc/config/tsconfig.json"]
+}

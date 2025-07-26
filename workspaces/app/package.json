@@ -1,0 +1,11 @@
+{
+  "name": "@mcc/app",
+  "version": "1.0.0",
+  "author": "NISHIZAWA Shuntaro",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@mcc/config": "workspace:*"
+  }
+}
