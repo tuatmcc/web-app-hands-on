@@ -5,6 +5,15 @@
   "license": "MIT",
   "private": true,
   "type": "module",
+  "scripts": {
+    "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "@hono/swagger-ui": "0.5.2",
+    "@hono/zod-openapi": "1.0.2",
+    "hono": "4.8.9",
+    "zod": "4.0.10"
+  },
   "devDependencies": {
     "@mcc/config": "workspace:*",
     "typescript": "5.8.3",
