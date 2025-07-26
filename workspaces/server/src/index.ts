@@ -2,7 +2,9 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { helloWorldQuery, helloWorldResponse } from "@mcc/schema/api";
 
-type Bindings = {};
+type Bindings = {
+	DB: D1Database;
+};
 
 const app = new OpenAPIHono<{ Bindings: Bindings }>();
 

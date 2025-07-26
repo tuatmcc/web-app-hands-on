@@ -1,3 +1,8 @@
 name = "micro-communication-chat"
 compatibility_date = "2025-07-26"
 main = "src/index.ts"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "micro-communication-chat"
+database_id = "52097e3b-2349-4bff-b965-99394d82a447"
