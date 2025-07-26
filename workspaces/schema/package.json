@@ -1,0 +1,14 @@
+{
+  "name": "@mcc/schema",
+  "version": "1.0.0",
+  "author": "NISHIZAWA Shuntaro",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./src/api.ts"
+  },
+  "dependencies": {
+    "zod": "4.0.10"
+  }
+}

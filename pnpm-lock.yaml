@@ -31,6 +31,12 @@ importers:
         specifier: 5.8.3
         version: 5.8.3
 
+  workspaces/schema:
+    dependencies:
+      zod:
+        specifier: 4.0.10
+        version: 4.0.10
+
   workspaces/server:
     dependencies:
       '@hono/swagger-ui':
@@ -49,6 +55,9 @@ importers:
       '@mcc/config':
         specifier: workspace:*
         version: link:../config
+      '@mcc/schema':
+        specifier: workspace:*
+        version: link:../schema
       typescript:
         specifier: 5.8.3
         version: 5.8.3
