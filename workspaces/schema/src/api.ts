@@ -1,4 +1,7 @@
 import { z } from "@hono/zod-openapi";
+import * as zod from "zod";
+
+zod.config(zod.locales.ja());
 
 export const helloWorldQuery = z.object({
 	name: z.string().optional().openapi({

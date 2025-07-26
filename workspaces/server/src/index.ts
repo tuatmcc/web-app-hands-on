@@ -1,6 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { swaggerUI } from "@hono/swagger-ui";
-import { OpenAPIHono } from "@hono/zod-openapi";
+import { OpenAPIHono, z } from "@hono/zod-openapi";
 import type * as apiSchema from "@mcc/schema/api";
 import * as schema from "@mcc/schema/database";
 import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
@@ -14,7 +14,21 @@ import * as routes from "./routes";
 // 一つのDurableObjectのみを使うので、IDは固定
 const USECASE_ID = "DUMMY";
 
-const app = new OpenAPIHono<{ Bindings: Env }>();
+// 返信の数を取得するSQL
+const replySql =
+	sql<number>`(select count(*) from "posts" as "children" where "children"."parent_id" = "posts"."id")`.as(
+		"replies",
+	);
+
+const app = new OpenAPIHono<{ Bindings: Env }>({
+	defaultHook: (result, c) => {
+		if (!result.success) {
+			return c.json({ message: z.prettifyError(result.error) }, 400);
+		}
+
+		return;
+	},
+});
 
 app.openapi(routes.helloWorldRoute, (c) => {
 	const { name } = c.req.valid("query");
@@ -235,10 +249,7 @@ export class UseCase extends DurableObject {
 						)
 					: isNull(schema.posts.parentId),
 				extras: {
-					replies:
-						sql`(select count(*) from "posts" as "children" where "children"."parent_id" = "posts"."id")`.as(
-							"replies",
-						),
+					replies: replySql,
 				},
 			});
 
@@ -248,7 +259,7 @@ export class UseCase extends DurableObject {
 					name: post.name,
 					content: post.content,
 					likes: post.likes,
-					replies: post.replies as number,
+					replies: post.replies,
 					createdAt: post.createdAt,
 				})),
 			};
@@ -264,10 +275,7 @@ export class UseCase extends DurableObject {
 			const postResult = await tx.query.posts.findFirst({
 				where: eq(schema.posts.id, params.id),
 				extras: {
-					replies:
-						sql`(select count(*) from "posts" as "children" where "children"."parent_id" = "posts"."id")`.as(
-							"replies",
-						),
+					replies: replySql,
 				},
 			});
 			if (!postResult) {
@@ -279,10 +287,7 @@ export class UseCase extends DurableObject {
 				where: eq(schema.posts.parentId, params.id),
 				orderBy: desc(schema.posts.id),
 				extras: {
-					replies:
-						sql`(select count(*) from "posts" as "children" where "children"."parent_id" = "posts"."id")`.as(
-							"replies",
-						),
+					replies: replySql,
 				},
 			});
 
@@ -291,7 +296,7 @@ export class UseCase extends DurableObject {
 				name: postResult.name,
 				content: postResult.content,
 				likes: postResult.likes,
-				replies: postResult.replies as number,
+				replies: postResult.replies,
 				createdAt: postResult.createdAt,
 			};
 
@@ -300,7 +305,7 @@ export class UseCase extends DurableObject {
 				name: reply.name,
 				content: reply.content,
 				likes: reply.likes,
-				replies: reply.replies as number,
+				replies: reply.replies,
 				createdAt: reply.createdAt,
 			}));
 
