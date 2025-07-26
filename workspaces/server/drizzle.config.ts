@@ -6,6 +6,7 @@ const require = createRequire(import.meta.url);
 
 export default defineConfig({
 	dialect: "sqlite",
+	driver: "durable-sqlite",
 	schema: require.resolve("@mcc/schema/database"),
-	out: "./migrations",
+	out: "./drizzle",
 });

@@ -1,12 +1,14 @@
+import { DurableObject } from "cloudflare:workers";
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
+import * as schema from "@mcc/schema/database";
+import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
+import { drizzle } from "drizzle-orm/durable-sqlite";
+import { migrate } from "drizzle-orm/durable-sqlite/migrator";
+import migrations from "../drizzle/migrations";
 import * as routes from "./routes";
 
-type Bindings = {
-	DB: D1Database;
-};
-
-const app = new OpenAPIHono<{ Bindings: Bindings }>();
+const app = new OpenAPIHono<{ Bindings: Env }>();
 
 app.openapi(routes.helloWorldRoute, (c) => {
 	const { name } = c.req.valid("query");
@@ -44,5 +46,24 @@ app.doc("/openapi", {
 });
 
 app.get("/docs", swaggerUI({ url: "/openapi" }));
+
+export class UseCase extends DurableObject {
+	storage: DurableObjectStorage;
+	db: DrizzleSqliteDODatabase<typeof schema>;
+
+	constructor(ctx: DurableObjectState, env: Env) {
+		super(ctx, env);
+		this.storage = ctx.storage;
+		this.db = drizzle(this.storage, { schema });
+
+		ctx.blockConcurrencyWhile(async () => {
+			await this._migrate();
+		});
+	}
+
+	async _migrate() {
+		await migrate(this.db, migrations);
+	}
+}
 
 export default app;
