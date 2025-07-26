@@ -6,9 +6,16 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./api": "./src/api.ts"
+    "./api": "./src/api.ts",
+    "./database": "./src/database.ts"
   },
   "dependencies": {
-    "zod": "4.0.10"
+    "drizzle-orm": "0.44.3",
+    "drizzle-zod": "0.8.2",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@mcc/config": "workspace:*",
+    "typescript": "5.8.3"
   }
 }
