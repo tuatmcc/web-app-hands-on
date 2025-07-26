@@ -5,7 +5,27 @@
   "license": "MIT",
   "private": true,
   "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "1.129.8",
+    "@tanstack/react-router-devtools": "1.129.8",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "tailwindcss": "4.1.11"
+  },
   "devDependencies": {
-    "@mcc/config": "workspace:*"
+    "@mcc/config": "workspace:*",
+    "@tailwindcss/vite": "4.1.11",
+    "@tanstack/router-plugin": "1.129.8",
+    "@tsconfig/vite-react": "7.0.0",
+    "@types/react": "19.1.8",
+    "@types/react-dom": "19.1.6",
+    "@vitejs/plugin-react": "4.7.0",
+    "typescript": "5.8.3",
+    "vite": "7.0.6"
   }
 }
