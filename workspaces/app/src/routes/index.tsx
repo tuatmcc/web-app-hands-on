@@ -2,6 +2,7 @@ import { listPostsResponse } from "@mcc/schema/api";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Post } from "../components/Post";
+import { PostForm } from "../components/PostForm";
 
 export const Route = createFileRoute("/")({
 	component: Index,
@@ -22,7 +23,8 @@ function Index() {
 	});
 
 	return (
-		<div>
+		<div className="flex flex-col gap-4">
+			<PostForm />
 			<div className="flex flex-col gap-4">
 				{query.data?.posts.map((post) => (
 					<Post key={post.id} post={post} />
