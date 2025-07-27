@@ -1,3 +1,5 @@
+import { listPostsResponse } from "@mcc/schema/api";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Post } from "../components/Post";
 
@@ -6,19 +8,26 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+	const query = useQuery({
+		queryKey: ["posts"],
+		queryFn: async () => {
+			const response = await fetch("http://localhost:8787/api/posts");
+			if (!response.ok) {
+				throw new Error("Failed to fetch posts");
+			}
+			const json = await response.json();
+			const data = listPostsResponse.parse(json);
+			return data;
+		},
+	});
+
 	return (
 		<div>
-			<Post
-				post={{
-					id: "xxxx",
-					name: "しゅん",
-					content:
-						"あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。\nあのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。\nあのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。",
-					likes: 10,
-					replies: 3,
-					createdAt: 1722163200,
-				}}
-			/>
+			<div className="flex flex-col gap-4">
+				{query.data?.posts.map((post) => (
+					<Post key={post.id} post={post} />
+				))}
+			</div>
 		</div>
 	);
 }

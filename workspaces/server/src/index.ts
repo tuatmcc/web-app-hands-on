@@ -7,6 +7,7 @@ import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { drizzle } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
+import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import migrations from "../drizzle/migrations";
 import * as routes from "./routes";
@@ -29,6 +30,8 @@ const app = new OpenAPIHono<{ Bindings: Env }>({
 		return;
 	},
 });
+
+app.use("*", cors());
 
 app.openapi(routes.helloWorldRoute, (c) => {
 	const { name } = c.req.valid("query");
