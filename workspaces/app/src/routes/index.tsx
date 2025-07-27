@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Post } from "../components/Post";
 
 export const Route = createFileRoute("/")({
 	component: Index,
@@ -6,8 +7,18 @@ export const Route = createFileRoute("/")({
 
 function Index() {
 	return (
-		<div className="p-2">
-			<h1 className="font-bold text-2xl">Hello, World!</h1>
+		<div>
+			<Post
+				post={{
+					id: "xxxx",
+					name: "しゅん",
+					content:
+						"あのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。\nあのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。\nあのイーハトーヴォのすきとおった風、夏でも底に冷たさをもつ青いそら、うつくしい森で飾られたモリーオ市、郊外のぎらぎらひかる草の波。",
+					likes: 10,
+					replies: 3,
+					createdAt: 1722163200,
+				}}
+			/>
 		</div>
 	);
 }
