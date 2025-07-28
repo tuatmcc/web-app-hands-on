@@ -2,6 +2,7 @@ import { likePostResponse, type Post as PostType } from "@mcc/schema/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { LuHeart, LuMessageCircle } from "react-icons/lu";
+import { Link } from "@tanstack/react-router";
 
 interface Props {
 	post: PostType;
@@ -25,6 +26,7 @@ export function Post({ post }: Props): ReactNode {
 		},
 		onSuccess: () => {
 			query.invalidateQueries({ queryKey: ["posts"] });
+			query.invalidateQueries({ queryKey: ["posts", post.id] });
 		},
 	})
 
@@ -50,9 +52,9 @@ export function Post({ post }: Props): ReactNode {
 					<span>{post.likes}</span>
 				</form>
 				<div className="flex items-center gap-1">
-					<button type="button">
+					<Link to="/posts/$id" params={{ id: post.id }}>
 						<LuMessageCircle className="size-6" title="返信" />
-					</button>
+					</Link>
 					<span>{post.replies}</span>
 				</div>
 			</div>

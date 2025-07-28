@@ -5,10 +5,10 @@ import { Post } from "../components/Post";
 import { PostForm } from "../components/PostForm";
 
 export const Route = createFileRoute("/")({
-	component: Index,
+	component: Page,
 });
 
-function Index() {
+function Page() {
 	const query = useQuery({
 		queryKey: ["posts"],
 		queryFn: async () => {
