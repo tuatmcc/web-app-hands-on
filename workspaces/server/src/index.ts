@@ -39,61 +39,57 @@ app.use("*", async (_, next) => {
 	await next();
 });
 
-app.openapi(routes.helloWorldRoute, (c) => {
-	const { name } = c.req.valid("query");
-	return c.text(`Hello, ${name ?? "World"}!`);
-});
+const route = app
+	.openapi(routes.helloWorldRoute, (c) => {
+		const { name } = c.req.valid("query");
+		return c.text(`Hello, ${name ?? "World"}!`);
+	})
+	.openapi(routes.createPostRoute, async (c) => {
+		const body = c.req.valid("json");
 
-app.openapi(routes.createPostRoute, async (c) => {
-	const body = c.req.valid("json");
+		const id = c.env.USECASE.idFromName(USECASE_ID);
+		const stub = c.env.USECASE.get(id);
 
-	const id = c.env.USECASE.idFromName(USECASE_ID);
-	const stub = c.env.USECASE.get(id);
+		const result = await stub.createPost({ body });
+		return c.json(result, 200);
+	})
+	.openapi(routes.likePostRoute, async (c) => {
+		const params = c.req.valid("param");
 
-	const result = await stub.createPost({ body });
-	return c.json(result, 200);
-});
+		const id = c.env.USECASE.idFromName(USECASE_ID);
+		const stub = c.env.USECASE.get(id);
 
-app.openapi(routes.likePostRoute, async (c) => {
-	const params = c.req.valid("param");
+		const result = await stub.likePost({ params });
+		return c.json(result, 200);
+	})
+	.openapi(routes.createReplyRoute, async (c) => {
+		const params = c.req.valid("param");
+		const body = c.req.valid("json");
 
-	const id = c.env.USECASE.idFromName(USECASE_ID);
-	const stub = c.env.USECASE.get(id);
+		const id = c.env.USECASE.idFromName(USECASE_ID);
+		const stub = c.env.USECASE.get(id);
 
-	const result = await stub.likePost({ params });
-	return c.json(result, 200);
-});
+		const result = await stub.createReply({ params, body });
+		return c.json(result, 200);
+	})
+	.openapi(routes.listPostsRoute, async (c) => {
+		const query = c.req.valid("query");
 
-app.openapi(routes.createReplyRoute, async (c) => {
-	const params = c.req.valid("param");
-	const body = c.req.valid("json");
+		const id = c.env.USECASE.idFromName(USECASE_ID);
+		const stub = c.env.USECASE.get(id);
 
-	const id = c.env.USECASE.idFromName(USECASE_ID);
-	const stub = c.env.USECASE.get(id);
+		const result = await stub.listPosts({ query });
+		return c.json(result, 200);
+	})
+	.openapi(routes.getPostRoute, async (c) => {
+		const params = c.req.valid("param");
 
-	const result = await stub.createReply({ params, body });
-	return c.json(result, 200);
-});
+		const id = c.env.USECASE.idFromName(USECASE_ID);
+		const stub = c.env.USECASE.get(id);
 
-app.openapi(routes.listPostsRoute, async (c) => {
-	const query = c.req.valid("query");
-
-	const id = c.env.USECASE.idFromName(USECASE_ID);
-	const stub = c.env.USECASE.get(id);
-
-	const result = await stub.listPosts({ query });
-	return c.json(result, 200);
-});
-
-app.openapi(routes.getPostRoute, async (c) => {
-	const params = c.req.valid("param");
-
-	const id = c.env.USECASE.idFromName(USECASE_ID);
-	const stub = c.env.USECASE.get(id);
-
-	const result = await stub.getPost({ params });
-	return c.json(result, 200);
-});
+		const result = await stub.getPost({ params });
+		return c.json(result, 200);
+	});
 
 app.doc("/openapi", {
 	openapi: "3.0.0",
@@ -325,5 +321,7 @@ export class UseCase extends DurableObject {
 		});
 	}
 }
+
+export type AppType = typeof route;
 
 export default app;

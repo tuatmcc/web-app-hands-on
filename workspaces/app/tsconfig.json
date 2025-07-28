@@ -1,9 +1,9 @@
 {
-  "extends": [
-    "@mcc/config/tsconfig.json",
-    "@tsconfig/vite-react/tsconfig.json"
-  ],
-  "compilerOptions": {
-    "types": ["vite/client"]
-  }
+	"extends": [
+		"@mcc/config/tsconfig.json",
+		"@tsconfig/vite-react/tsconfig.json"
+	],
+	"compilerOptions": {
+		"types": ["vite/client"]
+	}
 }

@@ -1,6 +1,7 @@
-import { type CreatePostBody, createPostResponse } from "@mcc/schema/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
+import { fetchClient } from "../libs/fetch-client";
 
 export function PostForm(): ReactNode {
 	const [name, setName] = useState("");
@@ -10,26 +11,18 @@ export function PostForm(): ReactNode {
 
 	const mutation = useMutation({
 		mutationFn: async () => {
-			const body: CreatePostBody = {
-				name: name || undefined,
-				content,
-			};
-
-			const response = await fetch("http://localhost:8787/api/posts", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
+			const response = await fetchClient.api.posts.$post({
+				json: {
+					name: name || undefined,
+					content,
 				},
-				body: JSON.stringify(body),
 			});
 
 			if (!response.ok) {
 				throw new Error("Failed to create post");
 			}
 
-			const json = await response.json();
-			const data = createPostResponse.parse(json);
-
+			const data = await response.json();
 			return data;
 		},
 		onSuccess: () => {

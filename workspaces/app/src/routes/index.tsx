@@ -1,8 +1,8 @@
-import { listPostsResponse } from "@mcc/schema/api";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Post } from "../components/Post";
 import { PostForm } from "../components/PostForm";
+import { fetchClient } from "../libs/fetch-client";
 
 export const Route = createFileRoute("/")({
 	component: Page,
@@ -12,12 +12,13 @@ function Page() {
 	const query = useQuery({
 		queryKey: ["posts"],
 		queryFn: async () => {
-			const response = await fetch("http://localhost:8787/api/posts");
+			const response = await fetchClient.api.posts.$get({
+				query: {},
+			});
 			if (!response.ok) {
 				throw new Error("Failed to fetch posts");
 			}
-			const json = await response.json();
-			const data = listPostsResponse.parse(json);
+			const data = await response.json();
 			return data;
 		},
 	});

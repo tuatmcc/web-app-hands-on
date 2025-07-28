@@ -1,8 +1,9 @@
-import { likePostResponse, type Post as PostType } from "@mcc/schema/api";
+import type { Post as PostType } from "@mcc/schema/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { LuHeart, LuMessageCircle } from "react-icons/lu";
-import { Link } from "@tanstack/react-router";
+import { fetchClient } from "../libs/fetch-client";
 
 interface Props {
 	post: PostType;
@@ -12,28 +13,29 @@ export function Post({ post }: Props): ReactNode {
 	const query = useQueryClient();
 	const mutation = useMutation({
 		mutationFn: async () => {
-			const response = await fetch(`http://localhost:8787/api/posts/${post.id}/like`, {
-				method: "POST",
-			})
+			const response = await fetchClient.api.posts[":id"].like.$post({
+				param: {
+					id: post.id,
+				},
+			});
 
 			if (!response.ok) {
 				throw new Error("Failed to like post");
 			}
 
-			const json = await response.json();
-			const data = likePostResponse.parse(json);
+			const data = await response.json();
 			return data;
 		},
 		onSuccess: () => {
 			query.invalidateQueries({ queryKey: ["posts"] });
 			query.invalidateQueries({ queryKey: ["posts", post.id] });
 		},
-	})
+	});
 
 	const handleLikeSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		mutation.mutate();
-	}
+	};
 
 	return (
 		<article className="flex flex-col gap-2 rounded-lg bg-white p-4 shadow-md">

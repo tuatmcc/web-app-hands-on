@@ -19,6 +19,9 @@ importers:
 
   workspaces/app:
     dependencies:
+      '@mcc/server':
+        specifier: workspace:*
+        version: link:../server
       '@tanstack/react-query':
         specifier: 5.83.0
         version: 5.83.0(react@19.1.0)
@@ -31,6 +34,9 @@ importers:
       clsx:
         specifier: 2.1.1
         version: 2.1.1
+      hono:
+        specifier: 4.8.9
+        version: 4.8.9
       react:
         specifier: 19.1.0
         version: 19.1.0
