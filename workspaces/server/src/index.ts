@@ -33,6 +33,12 @@ const app = new OpenAPIHono<{ Bindings: Env }>({
 
 app.use("*", cors());
 
+app.use("*", async (_, next) => {
+	await new Promise((resolve) => setTimeout(resolve, 1000));
+
+	await next();
+});
+
 app.openapi(routes.helloWorldRoute, (c) => {
 	const { name } = c.req.valid("query");
 	return c.text(`Hello, ${name ?? "World"}!`);

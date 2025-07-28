@@ -11,7 +11,7 @@ export function PostForm(): ReactNode {
 	const mutation = useMutation({
 		mutationFn: async () => {
 			const body: CreatePostBody = {
-				name,
+				name: name || undefined,
 				content,
 			};
 
@@ -34,7 +34,6 @@ export function PostForm(): ReactNode {
 		},
 		onSuccess: () => {
 			query.invalidateQueries({ queryKey: ["posts"] });
-			setName("");
 			setContent("");
 		},
 	});

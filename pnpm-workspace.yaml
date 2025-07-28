@@ -2,6 +2,7 @@ packages:
   - ./workspaces/*
 
 onlyBuiltDependencies:
+  - "@tailwindcss/oxide"
   - esbuild
   - sharp
   - workerd
@@ -9,4 +10,4 @@ onlyBuiltDependencies:
 patchedDependencies:
   drizzle-orm: patches/drizzle-orm.patch
 
-savePrefix: ''
+savePrefix: ""
