@@ -1,5 +1,6 @@
 packages:
   - ./workspaces/*
+  - ./docs
 
 onlyBuiltDependencies:
   - "@tailwindcss/oxide"
