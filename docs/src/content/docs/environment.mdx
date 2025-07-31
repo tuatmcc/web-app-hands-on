@@ -148,6 +148,7 @@ asdfやnodenvなどのツールを聞いたことがある人には馴染みの�
 
 		```bash
 		curl https://mise.run | sh
+		echo 'eval "$(~/.local/bin/mise activate bash --shims)"' >> ~/.bash_profile
 		echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc
 		```
 	</TabItem>
@@ -155,6 +156,7 @@ asdfやnodenvなどのツールを聞いたことがある人には馴染みの�
 	<TabItem label="macOS">
 		```bash
 		brew install mise
+		echo 'eval "$(mise activate zsh --shims)"' >> ~/.zprofile
 		echo 'eval "$(mise activate zsh)"' >> ~/.zshrc
 		```
 	</TabItem>
@@ -162,6 +164,7 @@ asdfやnodenvなどのツールを聞いたことがある人には馴染みの�
 	<TabItem label="Linux">
 		```bash
 		curl https://mise.run | sh
+		echo 'eval "$(~/.local/bin/mise activate bash --shims)"' >> ~/.bash_profile
 		echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc
 		```
 	</TabItem>

@@ -2,10 +2,12 @@
 
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
+import mermaid from "astro-mermaid";
 
 // https://astro.build/config
 export default defineConfig({
 	integrations: [
+		mermaid({ theme: "forest", autoTheme: true }),
 		starlight({
 			title: "MCC Webアプリ講習会資料",
 			locales: {
@@ -14,23 +16,6 @@ export default defineConfig({
 					label: "日本語",
 				},
 			},
-			// sidebar: [
-			// 	{
-			// 		label: "はじめに",
-			// 		slug: "",
-			// 	},
-			// 	{
-			// 		label: "Guides",
-			// 		items: [
-			// 			// Each item here is one entry in the navigation menu.
-			// 			{ label: "Example Guide", slug: "guides/example" },
-			// 		],
-			// 	},
-			// 	{
-			// 		label: "Reference",
-			// 		autogenerate: { directory: "reference" },
-			// 	},
-			// ],
 		}),
 	],
 });
