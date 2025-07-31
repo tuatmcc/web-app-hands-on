@@ -1,0 +1,174 @@
+---
+title: 環境構築
+sidebar:
+  order: 2
+---
+
+import { Aside, Tabs, TabItem } from "@astrojs/starlight/components"
+
+講習会を進めるにあたって、以下のようなツールを使用します。
+ある程度知識がある方は、これ以外のツールを使用して環境構築を行っても構いませんが、サポートはできないため注意してください。
+
+- **VSCode**: エディタ
+- **Postman**: APIのテストツール
+- **Git**: ソースコードのDLやバージョン管理ツール
+- **mise**: プロジェクトで使用するランタイム環境の管理ツール
+
+OSはWindows/macOS/Linuxのどれでも構いませんが、筆者の環境はmacOSのため動作確認はmacOSのみで行っています。
+**また、Windowsを使用する場合はWSL2を使用してください。環境構築もWSL2上で行います。**
+
+## VSCode
+
+VSCode(Visual Studio Code)はMicrosoftが開発しているオープンソースのエディタです。
+特徴として拡張機能が豊富にあり、それを使用することで様々な機能を追加できます。
+特にWebアプリ開発では拡張機能に頼ることが多いため、VSCodeを使用することをお勧めします。
+
+<Aside type="caution">
+	今回の講習会内でもいくつかの拡張機能を使用するため、VSCodeの使用を**強く推奨します。**
+	CursorやWindsurfなどのVSCodeのfork版エディタでも構いませんが、動作未検証です。
+</Aside>
+
+インストール方法ですが、[公式サイト](https://code.visualstudio.com/)からダウンロードしてインストールできます。
+しかし、コマンドラインからだと1コマンドでインストールできるため、こちらのほうが楽です。
+
+<Tabs syncKey="os">
+	<TabItem label="Windows">
+		Windowsの場合は`winget`コマンドでインストールできます。
+		なお、この作業はPowerShellでWindows環境上で行ってください(WSL2上だとできません)。
+
+		```powershell
+		winget install --id Microsoft.VisualStudioCode
+		```
+
+		Windowsの場合、WSL2用の拡張機能をインストールする必要があります。
+		VSCodeを起動し、拡張機能タブから`Remote Development`と検索して、「[Remote Development](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack)」をインストールしてください。
+	</TabItem>
+
+	<TabItem label="macOS">
+		macOSの場合は`brew`コマンドでインストールできます。
+		もしも`brew`コマンドが使用できない場合は、[Homebrewの公式サイト](https://brew.sh/ja/)に従ってHomebrewをインストールしてください。
+
+		```bash
+		brew install visual-studio-code
+		```
+	</TabItem>
+
+	<TabItem label="Linux">
+		Linuxの場合はディストリビューションによって異なるため、[公式ドキュメント](https://code.visualstudio.com/docs/setup/linux)に従ってください。
+		ここでは例として`snap`を使用した場合のインストール方法を記載します。
+
+		```bash
+		sudo snap install code --classic
+		```
+	</TabItem>
+</Tabs>
+
+
+インストール後、ターミナルで`code`コマンドが使用できるか確認してください。このコマンドを使うとVSCodeが起動します。
+もし使用できない場合は、一度ターミナルを再起動してみるか、それでもうまくいかない場合はVSCodeで`Control + Shift + P`を押してコマンドパレットを開き、`shell command`と入力すると`Shell Command: Install 'code' command in PATH`というコマンドが出てくるので、それを実行してください。
+
+## Postman
+
+PostmanはAPIのテストツールです。
+APIにリクエストを送信したり、レスポンスを確認したりできます。
+
+こちらも[公式サイト](https://www.postman.com/)か、コマンドラインからインストールしてください。
+
+<Tabs syncKey="os">
+	<TabItem label="Windows">
+		```powershell
+		winget install --id Postman.Postman
+		```
+	</TabItem>
+
+	<TabItem label="macOS">
+		```bash
+		brew install postman
+		```
+	</TabItem>
+
+	<TabItem label="Linux">
+		```bash
+		sudo snap install postman
+		```
+	</TabItem>
+</Tabs>
+
+## Git
+
+Gitはソースコードのバージョン管理ツールです。
+ソースコードの変更履歴を管理し、必要に応じて元に戻すことができます。
+今回はソースコードがGitHub上にあるため、Gitを使用してソースコードをダウンロードします。
+
+こちらも[公式サイト](https://git-scm.com/)か、コマンドラインからインストールしてください。
+
+<Tabs syncKey="os">
+	<TabItem label="Windows">
+		WSL2上に導入するため、Windows環境上ではなくWSL2上で行ってください。
+
+		```bash
+		sudo apt update
+		sudo apt install git
+		```
+	</TabItem>
+
+	<TabItem label="macOS">
+		```bash
+		brew install git
+		```
+	</TabItem>
+
+	<TabItem label="Linux">
+		例として`apt`を使用した場合のインストール方法を記載します。
+
+		```bash
+		sudo apt update
+		sudo apt install git
+		```
+	</TabItem>
+</Tabs>
+
+インストール後、`git`コマンドが使用できるか確認してください。
+
+```bash
+git --version
+```
+
+## mise
+
+miseはプログラミング言語ランタイムやその他のツールのインストールを管理するツールです。
+特定のバージョンのランタイムを使用したい場合や、複数のバージョンのランタイムをプロジェクトごとに使い分けたいときに使用します。
+asdfやnodenvなどのツールを聞いたことがある人には馴染みのあるツールだと思います。
+
+[公式サイト](https://mise.jdx.dev/getting-started.html)の手順に従い、miseをインストールしてください。
+
+<Tabs syncKey="os">
+	<TabItem label="Windows">
+		WSL2上に導入するため、Windows環境上ではなくWSL2上で行ってください。
+
+		```bash
+		curl https://mise.run | sh
+		echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc
+		```
+	</TabItem>
+
+	<TabItem label="macOS">
+		```bash
+		brew install mise
+		echo 'eval "$(mise activate zsh)"' >> ~/.zshrc
+		```
+	</TabItem>
+
+	<TabItem label="Linux">
+		```bash
+		curl https://mise.run | sh
+		echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc
+		```
+	</TabItem>
+</Tabs>
+
+インストール後、`mise`コマンドが使用できるか確認してください。
+
+```bash
+mise --version
+```
