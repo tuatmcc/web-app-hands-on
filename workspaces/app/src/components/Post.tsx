@@ -1,63 +1,28 @@
-import type { Post as PostType } from "@mcc/schema/api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { LuHeart, LuMessageCircle } from "react-icons/lu";
-import { fetchClient } from "../libs/fetch-client";
 
-interface Props {
-	post: PostType;
-}
-
-export function Post({ post }: Props): ReactNode {
-	const query = useQueryClient();
-	const mutation = useMutation({
-		mutationFn: async () => {
-			const response = await fetchClient.api.posts[":id"].like.$post({
-				param: {
-					id: post.id,
-				},
-			});
-
-			if (!response.ok) {
-				throw new Error("Failed to like post");
-			}
-
-			const data = await response.json();
-			return data;
-		},
-		onSuccess: () => {
-			query.invalidateQueries({ queryKey: ["posts"] });
-			query.invalidateQueries({ queryKey: ["posts", post.id] });
-		},
-	});
-
-	const handleLikeSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-		e.preventDefault();
-		mutation.mutate();
-	};
-
+export function Post(): ReactNode {
 	return (
 		<article className="flex flex-col gap-2 rounded-lg bg-white p-4 shadow-md">
 			<div className="flex items-center gap-2">
 				<span className="size-8 rounded-full bg-slate-300" />
-				<span>{post.name ?? "名無しさん"}</span>
+				<span>太郎</span>
 			</div>
 
-			<p className="whitespace-pre-wrap">{post.content}</p>
+			<p className="whitespace-pre-wrap">こんにちは！</p>
 
 			<div className="flex gap-4 text-slate-500">
-				<form onSubmit={handleLikeSubmit} className="flex items-center gap-1">
-					<button type="submit">
+				<div className="flex items-center gap-1">
+					<button type="button">
 						<LuHeart className="size-6" title="いいね" />
 					</button>
-					<span>{post.likes}</span>
-				</form>
+					<span>10</span>
+				</div>
 				<div className="flex items-center gap-1">
-					<Link to="/posts/$id" params={{ id: post.id }}>
+					<div>
 						<LuMessageCircle className="size-6" title="返信" />
-					</Link>
-					<span>{post.replies}</span>
+					</div>
+					<span>3</span>
 				</div>
 			</div>
 		</article>

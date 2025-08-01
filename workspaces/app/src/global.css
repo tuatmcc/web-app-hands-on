@@ -6,3 +6,15 @@
 		cursor: pointer;
 	}
 }
+
+@utility card {
+	@apply rounded-lg bg-white p-4 shadow-md;
+}
+
+@utility button {
+	@apply rounded-full bg-sky-400 px-4 py-1 text-white active:bg-sky-500 disabled:bg-sky-300;
+}
+
+@utility input {
+	@apply w-full rounded-md border border-slate-400 bg-white p-2 outline-sky-400 outline-offset-4 disabled:bg-slate-100 disabled:text-slate-400;
+}
