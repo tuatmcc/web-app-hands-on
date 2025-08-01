@@ -1,7 +1,6 @@
-import type { ReactNode } from "react";
 import { LuHeart, LuMessageCircle } from "react-icons/lu";
 
-export function Post(): ReactNode {
+export function Post() {
 	return (
 		<article className="card flex flex-col gap-2">
 			<div className="flex items-center gap-2">

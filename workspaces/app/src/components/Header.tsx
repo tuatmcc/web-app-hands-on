@@ -1,13 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { clsx } from "clsx";
-import type { ReactNode } from "react";
 import Logo from "../assets/logo.png";
 
 interface Props {
 	className?: string;
 }
 
-export function Header({ className }: Props): ReactNode {
+export function Header({ className }: Props) {
 	return (
 		<header
 			className={clsx(
