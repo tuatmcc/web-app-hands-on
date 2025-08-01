@@ -3,7 +3,7 @@ import { LuHeart, LuMessageCircle } from "react-icons/lu";
 
 export function Post(): ReactNode {
 	return (
-		<article className="flex flex-col gap-2 rounded-lg bg-white p-4 shadow-md">
+		<article className="card flex flex-col gap-2">
 			<div className="flex items-center gap-2">
 				<span className="size-8 rounded-full bg-slate-300" />
 				<span>太郎</span>

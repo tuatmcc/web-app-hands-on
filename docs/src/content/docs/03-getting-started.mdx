@@ -1,7 +1,5 @@
 ---
 title: 開発を始める
-sidebar:
-  order: 4
 ---
 
 import { Aside } from "@astrojs/starlight/components"
@@ -83,11 +81,11 @@ pnpm install
 
 ```bash
 cd workspaces/app
-pnpm build
-pnpm preview
+pnpm dev
 ```
 
-コマンドを実行した状態で `http://localhost:4173` にアクセスして、こんな感じのページが表示されればOKです。
+コマンドを実行した状態で `http://localhost:5173` にアクセスして、こんな感じのページが表示されればOKです。
+ちなみに終了する場合は `Ctrl + C` か `q + Enter` です。
 
 ![](./assets/getting-started.png)
 
