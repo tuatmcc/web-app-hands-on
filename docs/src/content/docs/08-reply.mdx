@@ -292,6 +292,7 @@ function Page() {
 
 ```tsx title="workspaces/app/src/components/Post.tsx"
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { LuHeart, LuMessageCircle } from "react-icons/lu";
 import { apiClient } from "../lib/api";
 
@@ -339,9 +340,9 @@ export function Post({ id, name, content, likes, replies }: Props) {
 					<span>{likes}</span>
 				</div>
 				<div className="flex items-center gap-1">
-					<div>
+					<Link to="/posts/$id" params={{ id }}>
 						<LuMessageCircle className="size-6" title="返信" />
-					</div>
+					</Link>
 					<span>{replies}</span>
 				</div>
 			</div>
