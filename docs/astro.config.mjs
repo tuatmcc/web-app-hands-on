@@ -6,6 +6,7 @@ import mermaid from "astro-mermaid";
 
 // https://astro.build/config
 export default defineConfig({
+	site: "https://tuatmcc.github.io",
 	integrations: [
 		mermaid({ theme: "forest", autoTheme: true }),
 		starlight({
