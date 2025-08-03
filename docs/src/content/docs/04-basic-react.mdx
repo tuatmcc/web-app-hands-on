@@ -434,3 +434,205 @@ JSXでプロパティに値を設定する場合、`name={"太郎"}`のように
 ブラウザを確認すると、`Post`コンポーネントに設定した値が表示されていることがわかります。
 
 ![](./assets/post-props.png)
+
+### インタラクティブなコンポーネントを作ってみよう
+
+このままだとただHTMLを表示できるだけで、何も面白みがありません。
+そこで、`Post`コンポーネントにあるいいねボタンを押したらいいねが増えるようにしてみましょう。
+`Post`コンポーネントの中で、`handleClick`という関数を宣言します。
+次に、`<button>`タグの中の`onClick`プロパティに`handleClick`を設定します。
+
+
+```tsx title="workspaces/app/src/components/Post.tsx" ins={4-6,20} del={19}
+// 省略
+
+export function Post({ name, content, likes, replies }: Props) {
+	const handleClick = () => {
+		console.log("いいねしました");
+	};
+
+	return (
+		<article className="card flex flex-col gap-2">
+			<div className="flex items-center gap-2">
+				<span className="size-8 rounded-full bg-slate-300" />
+				<span>{name}</span>
+			</div>
+
+			<p className="whitespace-pre-wrap">{content}</p>
+
+			<div className="flex gap-4 text-slate-500">
+				<div className="flex items-center gap-1">
+					<button type="button">
+					<button type="button" onClick={handleClick}>
+						<LuHeart className="size-6" title="いいね" />
+					</button>
+					<span>{likes}</span>
+				</div>
+				<div className="flex items-center gap-1">
+					<div>
+						<LuMessageCircle className="size-6" title="返信" />
+					</div>
+					<span>{replies}</span>
+				</div>
+			</div>
+		</article>
+	);
+}
+```
+
+`() => { ... }`はJavaScriptの関数を書く別の方法です（アロー関数と呼ばれます）。
+`function`と基本的には同じですが、より短く書くことができるのでコンポーネント内で関数を定義する場合はよく使われます。
+
+関数の中身の`console.log()`は、ブラウザの開発者ツールにメッセージを表示するための機能です。
+画面には表示されませんが、プログラムが正しく動いているかを確認するのに非常に便利です。
+
+`<button>`の`onClick`は、ボタンがクリックされた時に実行する関数を指定するプロパティです。
+Reactでは、普通のHTMLタグに「何かが起きた時の処理」を追加することができます。
+
+例:
+- `onClick`: クリックされた時
+- `onMouseOver`: マウスが乗った時  
+- `onKeyPress`: キーが押された時
+
+今回は`onClick={handleClick}`と書くことで、ボタンがクリックされた時に`handleClick`関数が実行されるようになります。
+この`handleClick`という名前はもちろん自由に設定が可能ですが、Reactの流儀として`on`に設定する関数は`handle`という接頭辞をつけることが多いです。
+
+ブラウザの開発者ツールでタブを「Console」に切り替え、いいねボタンを押すと「いいねしました」と表示されることが確認できます。
+複数回クリックした場合、ログとしては出力されますが、同一のメッセージはまとめられるため、最初の「いいねしました」の隣にカウンタが表示され、その数字が増えていきます。
+
+次に、`<Post>`コンポーネントにいいね数を「記憶」させ、クリックするたびにいいね数が増えていくようにしてみましょう。
+
+普通のJavaScriptなら変数に値を代入すれば済みますが、Reactでは「state（ステート）」という特別な仕組みを使います。
+stateは、コンポーネントが値を覚えておくための機能です。
+
+Reactでは`useState`という関数を使ってstateを作ることができます。
+いいね数をstateで管理して、ボタンをクリックするたびに数が増えるようにしてみましょう。
+
+```tsx title="workspaces/app/src/components/Post.tsx" ins={1,12,13,16} del={7,11,15}
+import { useState } from "react";
+import { LuHeart, LuMessageCircle } from "react-icons/lu";
+
+interface Props {
+	name: string;
+	content: string;
+	likes: number;
+	replies: number;
+}
+
+export function Post({ name, content, likes, replies }: Props) {
+export function Post({ name, content, replies }: Props) {
+	const [likes, setLikes] = useState(0);
+	const handleClick = () => {
+		console.log("いいねしました");
+		setLikes(likes + 1); // いいね数を1増やす
+	};
+
+	return (
+		// 省略
+	);
+}
+```
+
+`useState(0)`を呼び出すと、2つのものが返ってきます。
+- `likes`: 現在のいいね数
+- `setLikes`: いいね数を変更するための関数
+なお、今回は`likes`, `setLikes`という名前をつけていますが、これは自由に設定が可能です。
+ただ、Reactの流儀として、`[変数名, set変数名]`という名前の組み合わせを使うことが多いです。
+
+`useState(0)`の`0`は初期値なので、いいね数は`0`から始まります。
+
+`setLikes(likes + 1)`は、現在のいいね数に`1`を足した値を新しいいいね数として設定するという意味です。
+
+`setLikes`を呼び出すと、Reactが自動的に画面を更新してくれます。
+これにより、新しいいいね数が画面に表示されるようになります。
+
+`Post`コンポーネントはプロパティとして`likes`を受け取らなくなったので、`workspaces/app/src/routes/index.tsx`の`<Post>`タグの中からも`likes`を削除します。
+
+```tsx title="workspaces/app/src/routes/index.tsx" {7-9}
+// 省略
+
+function Page() {
+	return (
+		<div className="flex flex-col gap-4">
+			<h1>Hello, React!</h1>
+			<Post name={"太郎"} content={"こんにちは！"} replies={3} />
+			<Post name={"花子"} content={"こんばんは！"} replies={5} />
+			<Post name={"太郎"} content={"おはよう！"} replies={7} />
+		</div>
+	);
+}
+```
+
+ブラウザを確認すると、いいねボタンをクリックするたびにいいね数が増えていることが確認できます。
+
+各`Post`コンポーネントは、それぞれ独自のいいね数を持っています。
+1つ目の`Post`のいいねボタンを押しても、2つ目や3つ目の`Post`のいいね数は変わりません。
+このように、コンポーネント一つひとつが独立してstateを管理しています。
+
+`setLikes`を呼び出すと、Reactが自動的にそのコンポーネントだけを更新して、画面に新しい値を表示してくれます。
+
+最後に、最終的なコードの全体像を示しておきます。
+
+```tsx title="workspaces/app/src/routes/index.tsx"
+import { createFileRoute } from "@tanstack/react-router";
+import { Post } from "../components/Post";
+
+export const Route = createFileRoute("/")({
+	component: Page,
+});
+
+function Page() {
+	return (
+		<div className="flex flex-col gap-4">
+			<h1>Hello, React!</h1>
+			<Post name={"太郎"} content={"こんにちは！"} replies={3} />
+			<Post name={"花子"} content={"こんばんは！"} replies={5} />
+			<Post name={"太郎"} content={"おはよう！"} replies={7} />
+		</div>
+	);
+}
+```
+
+```tsx title="workspaces/app/src/components/Post.tsx"
+import { useState } from "react";
+import { LuHeart, LuMessageCircle } from "react-icons/lu";
+
+interface Props {
+	name: string;
+	content: string;
+	replies: number;
+}
+
+export function Post({ name, content, replies }: Props) {
+	const [likes, setLikes] = useState(0);
+	const handleClick = () => {
+		setLikes(likes + 1);
+	};
+
+	return (
+		<article className="card flex flex-col gap-2">
+			<div className="flex items-center gap-2">
+				<span className="size-8 rounded-full bg-slate-300" />
+				<span>{name}</span>
+			</div>
+
+			<p className="whitespace-pre-wrap">{content}</p>
+
+			<div className="flex gap-4 text-slate-500">
+				<div className="flex items-center gap-1">
+					<button type="button" onClick={handleClick}>
+						<LuHeart className="size-6" title="いいね" />
+					</button>
+					<span>{likes}</span>
+				</div>
+				<div className="flex items-center gap-1">
+					<div>
+						<LuMessageCircle className="size-6" title="返信" />
+					</div>
+					<span>{replies}</span>
+				</div>
+			</div>
+		</article>
+	);
+}
+```
