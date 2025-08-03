@@ -324,14 +324,14 @@ function Page() {
 			}
 
 			const data = (await response.json()) as ListPostsResponse;
-			return data.posts;
+			return data;
 		},
 	});
 
 	return (
 		<div className="flex flex-col gap-4">
 			<PostForm />
-			{data?.map((post) => (
+			{data?.posts.map((post) => (
 				<Post
 					key={post.id}
 					name={post.name ?? "名無し"}

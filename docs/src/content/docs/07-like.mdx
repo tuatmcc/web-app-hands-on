@@ -1,0 +1,464 @@
+---
+title: いいね機能を作る
+---
+
+import { Aside } from "@astrojs/starlight/components"
+
+前回まででタイムラインの表示と投稿の作成ができるようになりました。
+次はいいねボタンを押したらAPIを呼び出していいねができるようにしてみましょう。
+
+## いいねボタンを押したらAPIを呼び出す
+
+実装方法は前回の投稿フォームとほぼ同じで、`useMutation`を使ってAPIを呼び出します。
+`workspaces/app/src/components/Post.tsx`を編集していいねボタンを押したときにAPIを呼び出すようにします。
+
+```tsx title="workspaces/app/src/components/Post.tsx" ins={1,5,13-33,47} del={12,46}
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { LuHeart, LuMessageCircle } from "react-icons/lu";
+
+interface Props {
+	id: string;
+	name: string;
+	content: string;
+	likes: number;
+	replies: number;
+}
+
+export function Post({ name, content, likes, replies }: Props) {
+export function Post({ id, name, content, likes, replies }: Props) {
+	const queryClient = useQueryClient();
+	const mutation = useMutation({
+		mutationFn: async ({ id }: { id: string }) => {
+			const response = await fetch(
+				`https://micro-communication-chat.tuatmcc-com.workers.dev/api/posts/${id}/like`,
+				{
+					method: "POST",
+				},
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to create post");
+			}
+
+			return response.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["posts"] });
+		},
+	});
+
+	return (
+		<article className="card flex flex-col gap-2">
+			<div className="flex items-center gap-2">
+				<span className="size-8 rounded-full bg-slate-300" />
+				<span>{name}</span>
+			</div>
+
+			<p className="whitespace-pre-wrap">{content}</p>
+
+			<div className="flex gap-4 text-slate-500">
+				<div className="flex items-center gap-1">
+					<button type="button">
+					<button type="button" onClick={() => mutation.mutate({ id })}>
+						<LuHeart className="size-6" title="いいね" />
+					</button>
+					<span>{likes}</span>
+				</div>
+				<div className="flex items-center gap-1">
+					<div>
+						<LuMessageCircle className="size-6" title="返信" />
+					</div>
+					<span>{replies}</span>
+				</div>
+			</div>
+		</article>
+	);
+}
+```
+
+いいね機能では`POST /api/posts/:id/like`というAPIを使用します。
+`:id`の部分には投稿のIDが入るため、`Post`コンポーネントに新しく`id`というプロパティを追加する必要があります。
+
+いいねボタンがクリックされた時に`mutation.mutate({ id })`を呼び出してAPIを実行します。
+投稿フォームと同様に、`onSuccess`で`queryClient.invalidateQueries({ queryKey: ["posts"] })`を呼び出すことで、いいね完了後にタイムラインのデータを再取得し、いいね数が即座に更新されるようにしています。
+
+`Post`コンポーネントのプロパティが増えたので、`routes/index.tsx`でも`id`を渡すようにします。
+
+```tsx title="workspaces/app/src/routes/index.tsx" ins={12}
+// 省略
+
+function Page() {
+	// 省略
+
+	return (
+		<div className="flex flex-col gap-4">
+			<PostForm />
+			{data?.map((post) => (
+				<Post
+					key={post.id}
+					id={post.id}
+					name={post.name ?? "名無し"}
+					content={post.content}
+					likes={post.likes}
+					replies={post.replies}
+				/>
+			))}
+		</div>
+	);
+}
+```
+
+ブラウザで動作確認をすると、いいねボタンを押すとその投稿とのいいね数が1ずつ増えるようになったと思います。
+
+## APIを叩く処理を改善する
+
+ここまで、APIを叩くときはブラウザに標準搭載されている`fetch`を使っていました。
+`fetch`は便利ですが、以下のような問題点があります。
+
+- URLをいちいち全部書かないといけないのでタイプミスの可能性がある
+- URLが間違っててもTypeScriptの型チェックではエラーにならない
+- `response.json()`で返ってくるデータの型をTypeScriptが自動で判断できないので`as`を使って手動で型を指定する必要がある
+
+このような問題点があるため、多くのWebアプリでは`fetch`を直接使わず、`fetch`をラップしたAPIクライアントライブラリを使うことが多いです。
+ライブラリを使うことで、素早く安全に開発を進めることができます。
+
+今回は[Hono RPC](https://hono.dev/docs/guides/rpc)というHonoの機能を使ってやってみましょう。
+HonoはAPIサーバーを作るためのライブラリで、今回のAPIサーバーはHonoで作成しているので、Hono RPCをすぐに使うことができます。
+
+まずはAPIクライアントを作成します。`workspaces/app/src/lib/api.ts`を作成して下記のコードを追加してください。
+
+```tsx title="workspaces/app/src/lib/api.ts"
+import type { AppType } from "@mcc/server";
+import { hc } from "hono/client";
+
+const BASE_URL = "https://micro-communication-chat.tuatmcc-com.workers.dev";
+
+export const apiClient = hc<AppType>(BASE_URL);
+```
+
+Hono RPCでは`hc`（Hono Client）という関数を使ってAPIクライアントを作成します。
+`hc`の引数にはAPIサーバーのベースURLを指定し、TypeScriptの型情報（`AppType`）を渡すことで、型安全なAPIクライアントが生成されます。
+
+作成した`apiClient`を使ってAPIを叩くようにします。
+まずは`workspaces/app/src/components/Post.tsx`を編集して、APIを叩くときに`apiClient`を使うようにします。
+
+```tsx title="workspaces/app/src/components/Post.tsx" ins={3,17-19} del={11-16}
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { LuHeart, LuMessageCircle } from "react-icons/lu";
+import { apiClient } from "../lib/api";
+
+// 省略
+
+export function Post({ id, name, content, likes, replies }: Props) {
+	const queryClient = useQueryClient();
+	const mutation = useMutation({
+		mutationFn: async ({ id }: { id: string }) => {
+			const response = await fetch(
+        `https://micro-communication-chat.tuatmcc-com.workers.dev/api/posts/${id}/like`,
+        {
+          method: "POST",
+        },
+      );
+			const response = await apiClient.api.posts[":id"].like.$post({
+				param: { id },
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to like post");
+			}
+
+			return response.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["posts"] });
+		},
+	});
+
+	return (
+		// 省略
+	);
+}
+```
+
+これで、URLの管理が不要になり、型安全性も向上し、コードもよりシンプルになりました。
+同様に、他のAPIを呼び出している箇所も`apiClient`を使うように変更しましょう。
+
+```tsx title="workspaces/app/src/components/PostForm.tsx" ins={4,28-33} del={18-27}
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { FormEvent } from "react";
+import { useState } from "react";
+import { apiClient } from "../lib/api";
+
+export function PostForm() {
+	// 省略
+
+	const queryClient = useQueryClient();
+	const mutation = useMutation({
+		mutationFn: async ({
+			name,
+			content,
+		}: {
+			name: string;
+			content: string;
+		}) => {
+			const response = await fetch(
+				"https://micro-communication-chat.tuatmcc-com.workers.dev/api/posts",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ name: name || undefined, content }),
+				},
+			);
+			const response = await apiClient.api.posts.$post({
+				json: {
+					name: name || undefined,
+					content,
+				},
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to create post");
+			}
+
+			return response.json();
+		},
+		onSuccess: () => {/* 省略 */},
+	});
+
+	// 省略
+}
+```
+
+```tsx title="workspaces/app/src/routes/index.tsx" ins={6,17-19,26} del={1,14-16,25}
+import type { ListPostsResponse } from "@mcc/schema/api";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { Post } from "../components/Post";
+import { PostForm } from "../components/PostForm";
+import { apiClient } from "../lib/api";
+
+// 省略
+
+function Page() {
+	const { data } = useQuery({
+		queryKey: ["posts"],
+		queryFn: async () => {
+			const response = await fetch(
+				"https://micro-communication-chat.tuatmcc-com.workers.dev/api/posts",
+			);
+			const response = await apiClient.api.posts.$get({
+				query: {},
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch posts");
+			}
+
+			const data = (await response.json()) as ListPostsResponse;
+			const data = await response.json();
+			return data;
+		},
+	});
+
+	return (
+		// 省略
+	);
+}
+```
+
+画面上の動作は変わりませんが、コードの安全性と保守性が大幅に向上しました。
+型チェックによってAPIの呼び出し方法の間違いを事前に発見でき、URLの管理も不要になりました。
+
+## これまでのコード
+
+これまでのコードをまとめておきます。
+
+```tsx title="workspaces/app/src/routes/index.tsx"
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { Post } from "../components/Post";
+import { PostForm } from "../components/PostForm";
+import { apiClient } from "../lib/api";
+
+export const Route = createFileRoute("/")({
+	component: Page,
+});
+
+function Page() {
+	const { data } = useQuery({
+		queryKey: ["posts"],
+		queryFn: async () => {
+			const response = await apiClient.api.posts.$get({
+				query: {},
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch posts");
+			}
+
+			return response.json();
+		},
+	});
+
+	return (
+		<div className="flex flex-col gap-4">
+			<PostForm />
+			{data?.posts.map((post) => (
+				<Post
+					key={post.id}
+					id={post.id}
+					name={post.name ?? "名無し"}
+					content={post.content}
+					likes={post.likes}
+					replies={post.replies}
+				/>
+			))}
+		</div>
+	);
+}
+```
+
+```tsx title="workspaces/app/src/components/Post.tsx"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { LuHeart, LuMessageCircle } from "react-icons/lu";
+import { apiClient } from "../lib/api";
+
+interface Props {
+	id: string;
+	name: string;
+	content: string;
+	likes: number;
+	replies: number;
+}
+
+export function Post({ id, name, content, likes, replies }: Props) {
+	const queryClient = useQueryClient();
+	const mutation = useMutation({
+		mutationFn: async ({ id }: { id: string }) => {
+			const response = await apiClient.api.posts[":id"].like.$post({
+				param: { id },
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to like post");
+			}
+
+			return response.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["posts"] });
+		},
+	});
+
+	return (
+		<article className="card flex flex-col gap-2">
+			<div className="flex items-center gap-2">
+				<span className="size-8 rounded-full bg-slate-300" />
+				<span>{name}</span>
+			</div>
+
+			<p className="whitespace-pre-wrap">{content}</p>
+
+			<div className="flex gap-4 text-slate-500">
+				<div className="flex items-center gap-1">
+					<button type="button" onClick={() => mutation.mutate({ id })}>
+						<LuHeart className="size-6" title="いいね" />
+					</button>
+					<span>{likes}</span>
+				</div>
+				<div className="flex items-center gap-1">
+					<div>
+						<LuMessageCircle className="size-6" title="返信" />
+					</div>
+					<span>{replies}</span>
+				</div>
+			</div>
+		</article>
+	);
+}
+```
+
+```tsx title="workspaces/app/src/components/PostForm.tsx"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { FormEvent } from "react";
+import { useState } from "react";
+import { apiClient } from "../lib/api";
+
+export function PostForm() {
+	const [name, setName] = useState("");
+	const [content, setContent] = useState("");
+
+	const queryClient = useQueryClient();
+	const mutation = useMutation({
+		mutationFn: async ({
+			name,
+			content,
+		}: {
+			name: string;
+			content: string;
+		}) => {
+			const response = await apiClient.api.posts.$post({
+				json: {
+					name: name || undefined,
+					content,
+				},
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to create post");
+			}
+
+			return response.json();
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["posts"] });
+			setContent("");
+		},
+	});
+
+	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		mutation.mutate({ name, content });
+	};
+
+	return (
+		<form
+			className="card flex flex-col items-end gap-2"
+			onSubmit={handleSubmit}
+		>
+			<label className="flex w-full flex-col gap-1">
+				<span>名前</span>
+				<input
+					type="text"
+					className="input"
+					value={name}
+					onChange={(e) => setName(e.target.value)}
+				/>
+			</label>
+			<label className="flex w-full flex-col gap-1">
+				<span>内容</span>
+				<textarea
+					className="input resize-none"
+					rows={5}
+					value={content}
+					onChange={(e) => setContent(e.target.value)}
+				/>
+			</label>
+			<button type="submit" className="button" disabled={mutation.isPending}>
+				投稿する
+			</button>
+		</form>
+	);
+}
+```
+
+```ts title="workspaces/app/src/lib/api.ts"
+import type { AppType } from "@mcc/server";
+import { hc } from "hono/client";
+
+const BASE_URL = "https://micro-communication-chat.tuatmcc-com.workers.dev";
+
+export const apiClient = hc<AppType>(BASE_URL);
+```
