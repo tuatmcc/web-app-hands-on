@@ -72,7 +72,7 @@ function Page() {
 
 中身を詳しく見てみましょう。
 
-- `<div>`は**JSX要素**と呼ばれるものです。JSXとは、HTMLのような見た目でUIの構造を書けるJavaScriptの書き方です
+- `<div>`は**JSX要素**と呼ばれるものです。JSXとは、HTMLのような見た目でUIの構造を書けるJavaScriptの拡張記法です。
 - `className="flex flex-col gap-4"`は、この`<div>`にCSSクラスを適用してスタイルを設定しています（HTMLの`class`と同じ役割ですが、Reactでは`className`と書きます）
 - `<h1>Hello, World!</h1>`は、見出しテキストを表示するための要素です
 - `</div>`で、最初に開いた`<div>`タグを閉じています
@@ -80,7 +80,7 @@ function Page() {
 つまり、この関数は「Hello, World!」という見出しを含む`<div>`要素を画面に表示するということになります。
 
 <Aside type="note">
-	JSXで書かれたコードはコンパイラやトランスパイラを通じて通常のJavaScriptコードに変換されます。
+	JSXで書かれたコードはそのままでは実行できないので、コンパイラやトランスパイラを通じて通常のJavaScriptコードに変換されます。
 	このコードでは、変換されると以下のようなコードになります。
 
 	```tsx
