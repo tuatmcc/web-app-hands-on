@@ -8,8 +8,14 @@
 	},
 	"files.autoSave": "onFocusChange",
 	"files.readonlyInclude": {
+		// "**": true,
 		"**/routeTree.gen.ts": true
 	},
+	// "files.readonlyExclude": {
+	// 	"workspaces/app/src/components/**": true,
+	// 	"workspaces/app/src/routes/**": true,
+	// 	"workspaces/app/src/lib/**": true
+	// },
 	"files.watcherExclude": {
 		"**/routeTree.gen.ts": true
 	},

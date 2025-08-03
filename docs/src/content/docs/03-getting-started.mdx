@@ -2,7 +2,7 @@
 title: 開発を始める
 ---
 
-import { Aside } from "@astrojs/starlight/components"
+import { Aside, FileTree } from "@astrojs/starlight/components"
 
 ここからは実際にソースコードを変更しながら、Webアプリの開発を進めていきます。
 
@@ -90,4 +90,42 @@ pnpm dev
 ![](./assets/getting-started.png)
 
 まだ何もありませんが、ここから実際にソースコードを変更しながらWebアプリの開発を進めていきます！
-なお、これ以降のターミナルでのコマンド実行は全て `workspaces/app` ディレクトリ上を想定しています。他のディレクトリで実行してもうまく行かないので注意してください。
+**なお、これ以降のターミナルでのコマンド実行は全て `workspaces/app` ディレクトリ上を想定しています。他のディレクトリで実行してもうまく行かないので注意してください。**
+
+## ファイルとディレクトリの構成
+
+今回のソースコードには様々なファイルやディレクトリが存在しますが、**基本的に編集するのは`workspaces/app/src`ディレクトリ以下のファイルになります。**
+その他のファイルは気にする必要はありませんが、以下のようなディレクトリ構成になっています。
+
+<FileTree>
+
+- .github/ このサイトを公開するためのCI/CDの設定
+- .vscode/ VSCodeの設定
+- docs/ このサイトのソースコード
+- node_modules/ 依存関係のインストール先
+- patches/ 依存関係へのパッチファイル
+- workspaces/ 各サービスのソースコード
+	- app/ 今回のWebアプリのソースコード
+		- index.html エントリーポイントとなるHTMLファイル
+		- package.json 依存関係の一覧やプロジェクトのメタ情報
+		- tsconfig.json TypeScriptの設定
+		- vite.config.ts Viteの設定
+	  - **src/** ソースコード
+			- assets/ 画像ファイルなど
+			- components/ コンポーネント一覧
+			- routes/ ページごとのコンポーネント
+			- global.css 全体のCSSファイル
+			- index.tsx エントリーポイントとなるファイル
+			- routeTree.gen.ts ルーティングの定義(自動生成)
+	- config/ 各サービスの設定ファイル集
+	- schema/ APIやデータベースのスキーマ定義集
+	- server/ サーバーのソースコード
+- .editorconfig コードスタイルの設定
+- .gitignore Gitの除外設定
+- biome.json リンター&フォーマッターであるBiomeの設定
+- mise.toml miseのツール一覧
+- package.json 依存関係の一覧やプロジェクトのメタ情報
+- pnpm-lock.yaml 依存関係のロックファイル
+- pnpm-workspace.yaml pnpmの設定
+
+</FileTree>
