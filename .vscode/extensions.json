@@ -1,9 +1,9 @@
 {
-  "recommendations": [
-    "biomejs.biome",
-    "bradlc.vscode-tailwindcss",
-    "editorconfig.editorconfig",
-    "visualstudioexptteam.intellicode-api-usage-examples",
-    "visualstudioexptteam.vscodeintellicode"
-  ]
+	"recommendations": [
+		"biomejs.biome",
+		"bradlc.vscode-tailwindcss",
+		"editorconfig.editorconfig",
+		"visualstudioexptteam.intellicode-api-usage-examples",
+		"visualstudioexptteam.vscodeintellicode"
+	]
 }

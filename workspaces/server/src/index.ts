@@ -99,8 +99,12 @@ app.doc("/openapi", {
 	},
 	servers: [
 		{
+			url: "https://micro-communication-chat.tuatmcc-com.workers.dev/",
+			description: "server",
+		},
+		{
 			url: "http://localhost:8787",
-			description: "Local server",
+			description: "dev server",
 		},
 	],
 });

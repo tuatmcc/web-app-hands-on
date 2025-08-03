@@ -1,11 +1,11 @@
 {
-  "extends": [
-    "@tsconfig/recommended/tsconfig.json",
-    "@tsconfig/strictest/tsconfig.json"
-  ],
-  "compilerOptions": {
-    "noEmit": true,
-    "module": "esnext",
-    "moduleResolution": "bundler"
-  }
+	"extends": [
+		"@tsconfig/recommended/tsconfig.json",
+		"@tsconfig/strictest/tsconfig.json"
+	],
+	"compilerOptions": {
+		"noEmit": true,
+		"module": "esnext",
+		"moduleResolution": "bundler"
+	}
 }

@@ -1,13 +1,13 @@
 {
-  "name": "micro-communication-chat",
-  "version": "1.0.0",
-  "description": "Twitter風ミニSNS",
-  "author": "NISHIZAWA Shuntaro",
-  "license": "MIT",
-  "private": true,
-  "type": "module",
-  "packageManager": "pnpm@10.13.1",
-  "devDependencies": {
-    "@biomejs/biome": "2.1.2"
-  }
+	"name": "micro-communication-chat",
+	"version": "1.0.0",
+	"description": "Twitter風ミニSNS",
+	"author": "NISHIZAWA Shuntaro",
+	"license": "MIT",
+	"private": true,
+	"type": "module",
+	"packageManager": "pnpm@10.13.1",
+	"devDependencies": {
+		"@biomejs/biome": "2.1.2"
+	}
 }

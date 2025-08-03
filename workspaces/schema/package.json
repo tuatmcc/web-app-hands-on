@@ -1,23 +1,23 @@
 {
-  "name": "@mcc/schema",
-  "version": "1.0.0",
-  "author": "NISHIZAWA Shuntaro",
-  "license": "MIT",
-  "private": true,
-  "type": "module",
-  "exports": {
-    "./api": "./src/api.ts",
-    "./database": "./src/database.ts"
-  },
-  "dependencies": {
-    "@hono/zod-openapi": "1.0.2",
-    "dayjs": "1.11.13",
-    "drizzle-orm": "0.44.3",
-    "ulid": "3.0.1",
-    "zod": "4.0.10"
-  },
-  "devDependencies": {
-    "@mcc/config": "workspace:*",
-    "typescript": "5.8.3"
-  }
+	"name": "@mcc/schema",
+	"version": "1.0.0",
+	"author": "NISHIZAWA Shuntaro",
+	"license": "MIT",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./api": "./src/api.ts",
+		"./database": "./src/database.ts"
+	},
+	"dependencies": {
+		"@hono/zod-openapi": "1.0.2",
+		"dayjs": "1.11.13",
+		"drizzle-orm": "0.44.3",
+		"ulid": "3.0.1",
+		"zod": "4.0.10"
+	},
+	"devDependencies": {
+		"@mcc/config": "workspace:*",
+		"typescript": "5.8.3"
+	}
 }
