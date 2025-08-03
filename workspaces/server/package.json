@@ -13,7 +13,8 @@
 		"build": "wrangler deploy --minify --dry-run --outdir dist",
 		"dev": "wrangler dev",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate": "wrangler d1 migrations apply micro-communication-chat --local"
+		"db:migrate": "wrangler d1 migrations apply micro-communication-chat --local",
+		"seed": "node --experimental-transform-types scripts/generate-dummy-data.ts"
 	},
 	"dependencies": {
 		"@hono/swagger-ui": "0.5.2",
