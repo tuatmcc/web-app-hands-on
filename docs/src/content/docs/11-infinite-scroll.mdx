@@ -1,0 +1,284 @@
+---
+title: "応用編: 無限スクロール"
+---
+
+ここからは応用編として、更に高度な機能を追加して行きます。
+現在タイムラインは最新50件しか表示されません。
+TwitterやDiscordなど一般的なSNSだと、スクロールしていくと古い投稿にどんどん遡っていくことができます。
+これを「無限スクロール」と呼びます。TanStack Queryだとこの無限スクロールのための機能が標準で備わっているので、それを使って実装してみましょう。
+
+## hookの置き換え
+
+TanStack Queryで無限スクロールを実装する場合、これまで使っていた`useQuery`ではなく、`useInfiniteQuery`という専用の機能を使います。
+`useInfiniteQuery`は`useQuery`の拡張版で、複数のページにわたってデータを取得・管理することができます。
+
+まずは、既存の`useQuery`を`useInfiniteQuery`に置き換えて、今まで通りタイムラインが表示されるようにしてみましょう。
+
+```tsx title="workspaces/app/src/routes/index.tsx" ins={2-8,33-57,65} del={1,19-32,64}
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ListPostsResponse, Post as PostType } from "@mcc/schema/api";
+import type { QueryKey } from "@tanstack/react-query";
+import {
+	useInfiniteQuery,
+	useMutation,
+	useQueryClient,
+} from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { Post } from "../components/Post";
+import { PostForm } from "../components/PostForm";
+import { apiClient } from "../lib/api";
+
+export const Route = createFileRoute("/")({
+	component: Page,
+});
+
+function Page() {
+	const { data } = useQuery({
+		queryKey: ["posts"],
+		queryFn: async () => {
+			const response = await apiClient.api.posts.$get({
+				query: {},
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch posts");
+			}
+
+			return response.json();
+		},
+	});
+	const { data } = useInfiniteQuery<
+		ListPostsResponse,
+		Error,
+		PostType[],
+		QueryKey,
+		string | undefined
+	>({
+		queryKey: ["posts"],
+		initialPageParam: undefined,
+		getNextPageParam: (lastPage) => lastPage.posts.at(-1)?.id,
+		queryFn: async ({ pageParam }) => {
+			const response = await apiClient.api.posts.$get({
+				query: {
+					before: pageParam,
+				},
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch posts");
+			}
+
+			return response.json();
+		},
+		select: (data) => data.pages.flatMap((page) => page.posts),
+	});
+
+	// 省略
+
+	return (
+		<div className="flex flex-col gap-4">
+			<PostForm onSubmit={handlePostSubmit} isPending={mutation.isPending} />
+			{data?.posts.map((post) => (
+			{data?.map((post) => (
+				<Post
+					key={post.id}
+					id={post.id}
+					name={post.name ?? "名無し"}
+					content={post.content}
+					likes={post.likes}
+					replies={post.replies}
+				/>
+			))}
+		</div>
+	);
+}
+```
+
+`useInfiniteQuery`では、ページを分けてデータを取得するために、2つの特別な設定が必要です。
+
+`initialPageParam`は、最初のページを取得する時に使うパラメータです。
+今回は最初は最新の投稿から取得したいので、特別な指定は不要なため`undefined`にしています。
+
+`getNextPageParam`は、次のページを取得する時に必要なパラメータを決める関数です。
+今回使っているAPIは、`before`というパラメータに投稿のIDを指定すると、そのIDよりも古い投稿を取得できるようになっています。
+そこで、現在表示している投稿の中で最も古いもののIDを返すことで、「次は更に古い投稿を取得する」という指示をAPIに送ることができます。
+
+`select`は、APIから取得したデータを使いやすい形に変換するためのオプションです。
+
+`useInfiniteQuery`では、ページごとにデータが分かれて管理されています。
+例えば「1ページ目の投稿リスト」「2ページ目の投稿リスト」のような構造になっているため、そのままでは「全ての投稿を一覧表示する」ということができません。
+そこで`select`を使って、すべてのページの投稿を一つの配列にまとめ直しています。
+
+## 更に読み込むボタンを追加
+
+このままだとまだ最新50件が取得できているだけで、古い投稿は取得できていません。
+次には末尾に更に読み込むボタンを追加して、クリックしたら古い投稿を取得するようにしてみましょう。
+
+```tsx title="workspaces/app/src/routes/index.tsx" ins={17,58-66} del={16}
+import type { ListPostsResponse, Post as PostType } from "@mcc/schema/api";
+import type { QueryKey } from "@tanstack/react-query";
+import {
+	useInfiniteQuery,
+	useMutation,
+	useQueryClient,
+} from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { Post } from "../components/Post";
+import { PostForm } from "../components/PostForm";
+import { apiClient } from "../lib/api";
+
+// 省略
+
+function Page() {
+	const { data } = useInfiniteQuery<
+	const { data, fetchNextPage, hasNextPage } = useInfiniteQuery<
+		ListPostsResponse,
+		Error,
+		PostType[],
+		QueryKey,
+		string | undefined
+	>({
+		queryKey: ["posts"],
+		initialPageParam: undefined,
+		getNextPageParam: (lastPage) => lastPage.posts.at(-1)?.id,
+		queryFn: async ({ pageParam }) => {
+			const response = await apiClient.api.posts.$get({
+				query: {
+					before: pageParam,
+				},
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch posts");
+			}
+
+			return response.json();
+		},
+		select: (data) => data.pages.flatMap((page) => page.posts),
+	});
+
+	// 省略
+
+	return (
+		<div className="flex flex-col gap-4">
+			<PostForm onSubmit={handlePostSubmit} isPending={mutation.isPending} />
+			{data?.map((post) => (
+				<Post
+					key={post.id}
+					id={post.id}
+					name={post.name ?? "名無し"}
+					content={post.content}
+					likes={post.likes}
+					replies={post.replies}
+				/>
+			))}
+			{hasNextPage && (
+				<button
+					type="button"
+					className="button"
+					onClick={() => fetchNextPage()}
+				>
+					更に読み込む
+				</button>
+			)}
+		</div>
+	);
+}
+```
+
+`useInfiniteQuery`からは、ページング機能に関連する便利な値と関数が返ってきます。
+
+`hasNextPage`は、まだ読み込める投稿があるかどうかを示すフラグです。
+`true`なら「まだ古い投稿がある」、`false`なら「これが最後」ということを意味します。
+
+`fetchNextPage`は、次のページ（更に古い投稿）を取得するための関数です。
+この関数を呼び出すと、自動的に`getNextPageParam`で指定したパラメータを使ってAPIが呼び出され、新しいデータが既存のデータに追加されます。
+
+これらを使って、「まだ古い投稿がある場合のみボタンを表示し、クリックされたら次のページを読み込む」という機能を実装できます。
+
+これで、更に読み込むボタンを押したら古い投稿が取得できるようになりました。
+一番古い投稿まで遡ると、ボタンが表示されなくなります。
+
+## 自動で古い投稿を読み込むようにする
+
+いちいちボタンを押して古い投稿を読み込むのは面倒です。
+そこで、ボタンではなく末尾までスクロールしたら自動的に古い投稿を読み込むようにしてみましょう。
+
+```tsx title="workspaces/app/src/routes/index.tsx" ins={9,21-36,60} del={51-59}
+import type { ListPostsResponse, Post as PostType } from "@mcc/schema/api";
+import type { QueryKey } from "@tanstack/react-query";
+import {
+	useInfiniteQuery,
+	useMutation,
+	useQueryClient,
+} from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
+import { Post } from "../components/Post";
+import { PostForm } from "../components/PostForm";
+import { apiClient } from "../lib/api";
+
+export const Route = createFileRoute("/")({
+	component: Page,
+});
+
+function Page() {
+	// 省略
+
+	const ref = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		if (!ref.current) return;
+
+		const observer = new IntersectionObserver((entries) => {
+			if (entries[0]?.isIntersecting && hasNextPage) {
+				fetchNextPage();
+			}
+		});
+
+		observer.observe(ref.current);
+
+		return () => {
+			observer.disconnect();
+		};
+	}, [fetchNextPage, hasNextPage]);
+
+	return (
+		<div className="flex flex-col gap-4">
+			<PostForm onSubmit={handlePostSubmit} isPending={mutation.isPending} />
+			{data?.map((post) => (
+				<Post
+					key={post.id}
+					id={post.id}
+					name={post.name ?? "名無し"}
+					content={post.content}
+					likes={post.likes}
+					replies={post.replies}
+				/>
+			))}
+			{hasNextPage && (
+				<button
+					type="button"
+					className="button"
+					onClick={() => fetchNextPage()}
+				>
+					更に読み込む
+				</button>
+			)}
+			{hasNextPage && <div ref={ref} />}
+		</div>
+	);
+}
+```
+
+ここでは、手動でボタンを押す代わりに、末尾までスクロールしたら自動的に次のページを読み込む仕組みを作っています。
+
+まず、画面の末尾に見えない`<div>`要素を配置します。
+`useRef`を使って、この`<div>`要素をJavaScriptから参照できるようにしています。
+
+`useEffect`の中では、「スクロール検出」の仕組みを設定しています。
+`IntersectionObserver`というブラウザの機能を使うことで、「特定の要素が画面に表示されたかどうか」を監視することができます。
+
+末尾の`<div>`が画面に表示される = ユーザーが末尾までスクロールした、ということなので、その瞬間に`fetchNextPage()`を自動実行して次のページを読み込みます。
+これにより、ユーザーはスクロールするだけで、Twitterのような無限スクロール体験を得ることができます。
+
+これで、末尾までスクロールしたら自動的に古い投稿を読み込むようになりました。
