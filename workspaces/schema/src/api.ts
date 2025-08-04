@@ -43,11 +43,11 @@ export const post = z.object({
 export type Post = z.infer<typeof post>;
 
 export const createPostBody = z.object({
-	name: z.string().optional().openapi({
+	name: z.string().min(1).max(30).optional().openapi({
 		description: "投稿者の名前",
 		example: "しゅん",
 	}),
-	content: z.string().openapi({
+	content: z.string().min(1).max(500).openapi({
 		description: "投稿の内容",
 		example: "こんにちは",
 	}),
