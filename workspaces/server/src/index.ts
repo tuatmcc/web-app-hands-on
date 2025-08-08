@@ -9,8 +9,10 @@ import { drizzle } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
+import { logger } from "hono/logger";
 import migrations from "../drizzle/migrations";
 import * as routes from "./routes";
+import { seed } from "./seed";
 
 // 一つのDurableObjectのみを使うので、IDは固定
 const USECASE_ID = "DUMMY";
@@ -31,6 +33,7 @@ const app = new OpenAPIHono<{ Bindings: Env }>({
 	},
 });
 
+app.use("*", logger());
 app.use("*", cors());
 
 const route = app
@@ -112,7 +115,7 @@ export class UseCase extends DurableObject {
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
 		this.storage = ctx.storage;
-		this.db = drizzle(this.storage, { schema });
+		this.db = drizzle(this.storage, { schema, logger: true });
 
 		ctx.blockConcurrencyWhile(async () => {
 			await this._migrate();
@@ -120,7 +123,17 @@ export class UseCase extends DurableObject {
 	}
 
 	async _migrate() {
-		await migrate(this.db, migrations);
+		try {
+			await migrate(this.db, migrations);
+		} catch (error) {
+			console.error(error);
+			// マイグレーションで失敗する場合、DBが壊れているため破棄してリセットする
+			this.storage.deleteAll();
+			await migrate(this.db, migrations);
+		}
+
+		// マイグレーション完了後にシードを実行（既存データがあれば何もしない）
+		await seed(this.db);
 	}
 
 	async createPost({
@@ -128,15 +141,16 @@ export class UseCase extends DurableObject {
 	}: {
 		body: apiSchema.CreatePostBody;
 	}): Promise<apiSchema.CreatePostResponse> {
-		return this.db.transaction(async (tx) => {
-			const postResults = await tx
+		return this.db.transaction((tx) => {
+			const postResult = tx
 				.insert(schema.posts)
 				.values({
 					name: body.name,
 					content: body.content,
 				})
-				.returning();
-			const postResult = postResults[0];
+				.returning()
+				.get();
+
 			if (!postResult) {
 				tx.rollback();
 				throw new HTTPException(500, { message: "投稿の作成に失敗しました" });
@@ -158,27 +172,29 @@ export class UseCase extends DurableObject {
 	}: {
 		params: apiSchema.LikePostParams;
 	}): Promise<apiSchema.LikePostResponse> {
-		return this.db.transaction(async (tx) => {
-			const postResult = await tx.query.posts.findFirst({
-				where: eq(schema.posts.id, params.id),
-				extras: {
-					replies:
-						sql`(select count(*) from "posts" as "children" where "children"."parent_id" = "posts"."id")`.as(
-							"replies",
-						),
-				},
-			});
+		return this.db.transaction((tx) => {
+			const postResult = tx.query.posts
+				.findFirst({
+					where: eq(schema.posts.id, params.id),
+					extras: {
+						replies:
+							sql`(select count(*) from "posts" as "children" where "children"."parent_id" = "posts"."id")`.as(
+								"replies",
+							),
+					},
+				})
+				.sync();
 			if (!postResult) {
 				tx.rollback();
 				throw new HTTPException(404, { message: "投稿が存在しません" });
 			}
 
-			const updatedPostResults = await tx
+			const updatedPost = tx
 				.update(schema.posts)
 				.set({ likes: postResult.likes + 1 })
 				.where(eq(schema.posts.id, params.id))
-				.returning();
-			const updatedPost = updatedPostResults[0];
+				.returning()
+				.get();
 			if (!updatedPost) {
 				tx.rollback();
 				throw new HTTPException(500, { message: "投稿のいいねに失敗しました" });
@@ -202,24 +218,26 @@ export class UseCase extends DurableObject {
 		params: apiSchema.CreateReplyParams;
 		body: apiSchema.CreateReplyBody;
 	}): Promise<apiSchema.CreateReplyResponse> {
-		return this.db.transaction(async (tx) => {
-			const postResult = await tx.query.posts.findFirst({
-				where: eq(schema.posts.id, params.id),
-			});
+		return this.db.transaction((tx) => {
+			const postResult = tx.query.posts
+				.findFirst({
+					where: eq(schema.posts.id, params.id),
+				})
+				.sync();
 			if (!postResult) {
 				tx.rollback();
 				throw new HTTPException(404, { message: "投稿が存在しません" });
 			}
 
-			const replyResults = await tx
+			const replyResult = tx
 				.insert(schema.posts)
 				.values({
 					name: body.name,
 					content: body.content,
 					parentId: params.id,
 				})
-				.returning();
-			const replyResult = replyResults[0];
+				.returning()
+				.get();
 			if (!replyResult) {
 				tx.rollback();
 				throw new HTTPException(500, { message: "返信の作成に失敗しました" });
@@ -241,20 +259,22 @@ export class UseCase extends DurableObject {
 	}: {
 		query: apiSchema.ListPostsQuery;
 	}): Promise<apiSchema.ListPostsResponse> {
-		return this.db.transaction(async (tx) => {
-			const result = await tx.query.posts.findMany({
-				limit: query.limit,
-				orderBy: desc(schema.posts.id),
-				where: query.before
-					? and(
-							isNull(schema.posts.parentId),
-							lt(schema.posts.id, query.before),
-						)
-					: isNull(schema.posts.parentId),
-				extras: {
-					replies: replySql,
-				},
-			});
+		return this.db.transaction((tx) => {
+			const result = tx.query.posts
+				.findMany({
+					limit: query.limit,
+					orderBy: desc(schema.posts.id),
+					where: query.before
+						? and(
+								isNull(schema.posts.parentId),
+								lt(schema.posts.id, query.before),
+							)
+						: isNull(schema.posts.parentId),
+					extras: {
+						replies: replySql,
+					},
+				})
+				.sync();
 
 			return {
 				posts: result.map((post) => ({
@@ -274,25 +294,29 @@ export class UseCase extends DurableObject {
 	}: {
 		params: apiSchema.GetPostParams;
 	}): Promise<apiSchema.GetPostResponse> {
-		return this.db.transaction(async (tx) => {
-			const postResult = await tx.query.posts.findFirst({
-				where: eq(schema.posts.id, params.id),
-				extras: {
-					replies: replySql,
-				},
-			});
+		return this.db.transaction((tx) => {
+			const postResult = tx.query.posts
+				.findFirst({
+					where: eq(schema.posts.id, params.id),
+					extras: {
+						replies: replySql,
+					},
+				})
+				.sync();
 			if (!postResult) {
 				tx.rollback();
 				throw new HTTPException(404, { message: "投稿が存在しません" });
 			}
 
-			const replyResults = await tx.query.posts.findMany({
-				where: eq(schema.posts.parentId, params.id),
-				orderBy: desc(schema.posts.id),
-				extras: {
-					replies: replySql,
-				},
-			});
+			const replyResults = tx.query.posts
+				.findMany({
+					where: eq(schema.posts.parentId, params.id),
+					orderBy: desc(schema.posts.id),
+					extras: {
+						replies: replySql,
+					},
+				})
+				.sync();
 
 			const post: apiSchema.Post = {
 				id: postResult.id,
