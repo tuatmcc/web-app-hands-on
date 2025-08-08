@@ -2,6 +2,9 @@ name = "micro-communication-chat"
 compatibility_date = "2025-07-26"
 main = "src/index.ts"
 
+[observability]
+enabled = true
+
 [[durable_objects.bindings]]
 name = "USECASE"
 class_name = "UseCase"
